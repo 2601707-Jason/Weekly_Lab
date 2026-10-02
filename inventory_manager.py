@@ -1,11 +1,20 @@
-# b. After load_inventory() is working.
 # c. After the final save_inventory() is verified.
 
 import json
+from validators import (
+    ask,
+    parse_non_empty,
+    parse_price,
+    parse_stock,
+    parse_option,
+    parse_product_id,
+)
+
+INVENTORY_FILE = "inventory.json"
 
 
 def display_main_menu():
-    print(f"{'-' * 6} MENU {'-' * 6}")
+    print(f"{'-' * 10} MENU {'-' * 10}")
     menu = [
         "Display All Products",
         "Add Product",
@@ -16,10 +25,33 @@ def display_main_menu():
     ]
     for i, m in enumerate(menu, start=1):
         print(f"{i}. {m}")
-    print(f"{'-' * 6} MENU {'-' * 6}")
+    print("-" * 26)
+    print()
+
+
+def load_inventory(file=INVENTORY_FILE):
+    try:
+        with open(file, mode="r", encoding="utf-8") as f:
+            inventory = json.load(f)
+        print("inventory.json found.")
+        print("inventory loaded successfully.")
+        print()
+
+        return inventory
+
+    except FileNotFoundError:
+        print("inventory.json not found. Starting with an empty inventory.")
+        return []
+
+
+def save_inventory(inventory, file=INVENTORY_FILE):
+    with open(file, mode="w") as f:
+        json.dump(inventory, f, indent=4)
+    print("Inventory saved successfully to inventory.json")
 
 
 def display_all_products(inventory):
+    print()
     print("Current Inventory")
     print("-" * 50)
     for product in inventory:
@@ -27,67 +59,11 @@ def display_all_products(inventory):
             f"ID: {product["ID"]} | Name: {product["Name"]} | Price: ${product["Price"]:.2f} | Stock: {product["Stock"]}"
         )
     print("-" * 50)
+    print()
 
 
-def load_inventory(file):
-    try:
-        with open(file, mode="r", encoding="utf-8") as file:
-            inventory = json.load(file)
-        print("inventory.json found.")
-        print("inventory loaded successfully")
-        return inventory
-    
-    except FileNotFoundError:
-        print("inventory.json not found. Starting with an empty inventory.")
-        return []
-
-
-def ask(prompt, parse):
-    while True:
-        text = input(prompt).strip()
-        try:
-            return parse(text)
-        except ValueError as e:
-            print(e)
-
-
-def parse_non_empty(text):
-    if not text:
-        raise ValueError("This cannot be empty")
-    return text
-
-
-def parse_price(text):
-    try:
-        price = float(text)
-    except ValueError:
-        raise ValueError("Please enter a number e.g. 299.99")
-    if price <= 0:
-        raise ValueError("Price must be greater than 0")
-    return price
-
-
-def parse_stock(text):
-    if not text.isdigit():
-        raise ValueError("Please enter a whole number (0 or more).")
-    return int(text)
-
-
-def parse_option(text):
-    if not text.isdigit() or not 1 <= int(text) <= 6:
-        raise ValueError("Please enter a valid option")
-    return int(text)
-
-
-def parse_product_id(text, inventory):
-    if not text:
-        raise ValueError("This cannot be empty")
-    if any(item["ID"] == text for item in inventory):
-        raise ValueError(f"{text} already exists")
-    return text
-
-
-def add_product(inventory: list):
+def add_product(inventory):
+    print()
     product_id = ask("Product ID: ", lambda t: parse_product_id(t, inventory))
     product_name = ask("Produt Name: ", parse_non_empty)
     product_price = ask("Price: ", parse_price)
@@ -100,32 +76,103 @@ def add_product(inventory: list):
         "Stock": product_stock,
     }
     inventory.append(new_product)
-
+    print()
     print("Product added successfully!")
-    return
+
+
+def update_stock(inventory):
+    print()
+    print("Update Stock")
+    product_id = ask("Enter Product ID: ", parse_non_empty)
+    print()
+
+    found = None
+
+    for product in inventory:
+        if product["ID"] == product_id:
+            found = product
+            break
+
+    if found is None:
+        print("Product not found.")
+        return
+
+    print("Product Found:")
+    print(f"Name: {found['Name']}")
+    print(f"Current Stock: {found['Stock']}")
+    print()
+
+    updated_stock = ask("New Stock Quantity: ", parse_stock)
+    found["Stock"] = updated_stock
+    print()
+    print("Stock updated successfully")
+
+
+def search_product(inventory):
+    print()
+    print("Search Product")
+    product_id = ask("Enter Product ID: ", parse_non_empty)
+    print()
+
+    found = None
+
+    for product in inventory:
+        if product["ID"] == product_id:
+            found = product
+
+    if found is None:
+        print("Product not found.")
+        return
+
+    print("Product Found")
+    print("-" * 50)
+
+    print(f"ID: {found["ID"]}")
+    print(f"Name: {found["Name"]}")
+    print(f"Price: {found["Price"]}")
+    print(f"Stock: {found["Stock"]}")
+
+    print("-" * 50)
+    print()
+
+
+def exit_program(inventory):
+    print("Saving inventory before exit...")
+    save_inventory(inventory)
+
+    print()
+    print("Thank you for using Inventory Management System.")
+    print("Program Terminated")
 
 
 def main():
-    print("=" * 20)
+    print("=" * 45)
     print("INVENTORY MANAGEMENT SYSTEM")
-    print("=" * 20)
-    
-    inventory = load_inventory("inventory.json")
-    
-    # inventory = [
-    #     {"ID": "P001", "Name": "Laptop", "Price": 1200, "Stock": 15},
-    #     {"ID": "P002", "Name": "Mouse", "Price": 25.20, "Stock": 40},
-    #     {"ID": "P003", "Name": "Keyboard", "Price": 45.00, "Stock": 25},
-    # ]
+    print("=" * 45)
 
-    actions = {1: display_all_products, 2: add_product}
+    print()
+
+    inventory = load_inventory()
+
+    actions = {
+        1: display_all_products,
+        2: add_product,
+        3: update_stock,
+        4: search_product,
+        5: save_inventory,
+        6: exit_program,
+    }
 
     display_main_menu()
 
     while True:
 
-        option = ask("Enter option: ", parse_option)
+        option = ask(f"Enter option: ({1} - {len(actions)}): ", parse_option)
         actions[option](inventory)
 
+        if option == 6:
+            break
 
-main()
+
+if __name__ == "__main__":
+    main()
