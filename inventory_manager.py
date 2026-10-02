@@ -1,5 +1,3 @@
-# c. After the final save_inventory() is verified.
-
 import json
 from validators import (
     ask,
@@ -56,7 +54,7 @@ def display_all_products(inventory):
     print("-" * 50)
     for product in inventory:
         print(
-            f"ID: {product["ID"]} | Name: {product["Name"]} | Price: ${product["Price"]:.2f} | Stock: {product["Stock"]}"
+            f"ID: {product['ID']} | Name: {product['Name']} | Price: ${product['Price']:.2f} | Stock: {product['Stock']}"
         )
     print("-" * 50)
     print()
@@ -127,10 +125,10 @@ def search_product(inventory):
     print("Product Found")
     print("-" * 50)
 
-    print(f"ID: {found["ID"]}")
-    print(f"Name: {found["Name"]}")
-    print(f"Price: {found["Price"]}")
-    print(f"Stock: {found["Stock"]}")
+    print(f"ID: {found['ID']}")
+    print(f"Name: {found['Name']}")
+    print(f"Price: {found['Price']}")
+    print(f"Stock: {found['Stock']}")
 
     print("-" * 50)
     print()
